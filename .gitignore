@@ -1,0 +1,9 @@
+# Ignore the build dir
+build
+
+# Ignore out.txt and split
+out.txt
+x*
+
+# Ignore built executable
+pi
