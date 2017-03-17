@@ -8,11 +8,19 @@ int main() {
 	mpz_class pote(426880);
 	mpz_class inte;
 	mpz_class sum(13591409);
-	mpq_class t(1);
+	mpq_class t(101);
+	mpq_class ausgabe;
 
 	while (true) {
 		//Thread 0:
-		std::cout << std::setprecision(1000) << n << ": " << mpf_class(mpq_class(pote, sum)*t, 100000000) << std::endl;
+		
+		if(n%2!=0){
+			ausgabe=mpq_class(pote*10005, sum)/t;
+		}
+		else{
+			ausgabe=mpq_class(pote, sum)*t;
+		}
+		std::cout << std::setprecision(150) << n << ": " << mpf_class(ausgabe, 100000000) << std::endl;
 
 		//Thread 1:
 			//Thread 1.1:
