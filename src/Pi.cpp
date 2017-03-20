@@ -27,29 +27,24 @@ void output() {
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1));
 		
-		std::unique_lock<std::mutex> lck(m);
-		cond.wait(lck);
-		int n1(n);
-		mpz_class pote1(pote);
-		mpz_class sum1(sum);
-		cond.wait(lck);
-		int n2(n);
-		mpz_class pote2(pote);
-		mpz_class sum2(sum);
-		lck.unlock();
-		
 		std::unique_lock<std::mutex> lck2(m2);
 		mpq_class ti(t);
 		lck2.unlock();
 		
-		auto a1 = std::async(out, n1, std::move(pote1), std::move(sum1), ti);
-		auto a2 = std::async(out, n2, std::move(pote2), std::move(sum2), std::move(ti));
+		std::unique_lock<std::mutex> lck(m);
+		cond.wait(lck);
+		int n1(n);
+		auto a1 = std::async(out, n, pote, sum, ti);
+		cond.wait(lck);
+		int n2(n);
+		auto a2 = std::async(out, n, pote, sum, std::move(ti));
+		lck.unlock();
 		
 		mpq_class chudnovsky1 = a1.get();
 		mpq_class chudnovsky2 = a2.get();
 		
-		std::cout << std::setprecision(192) << n1 << ": " << mpf_class(chudnovsky1, 193) << std::endl;
-		std::cout << std::setprecision(192) << n2 << ": " << mpf_class(chudnovsky2, 193) << std::endl << std::endl;
+		std::cout << std::setprecision(192) << n1 << ": " << mpf_class(chudnovsky1, 1000) << std::endl;
+		std::cout << std::setprecision(192) << n2 << ": " << mpf_class(chudnovsky2, 1000) << std::endl << std::endl;
 	}
 }
 
