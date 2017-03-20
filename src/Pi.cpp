@@ -4,6 +4,7 @@
 #include <thread>
 #include <condition_variable>
 #include <mutex>
+#include <future>
 
 int n(0);
 mpz_class pote(426880);
@@ -15,69 +16,73 @@ std::mutex m;
 std::mutex m2;
 
 void output() {
+	auto out = [](int n, mpz_class pote, mpz_class sum, mpq_class t) -> mpq_class {
+		if(n%2 == 0) {
+			return mpq_class(pote*10005, sum)/t;
+		} else {
+			return mpq_class(pote, sum)*t;
+		}
+	};
+	
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-		std::cout << "1" << std::endl;
+		
 		std::unique_lock<std::mutex> lck(m);
-		std::cout << "2" << std::endl;
 		cond.wait(lck);
-		std::cout << "3" << std::endl;
 		int n1(n);
-		mpz_class sum1(sum);
 		mpz_class pote1(pote);
+		mpz_class sum1(sum);
 		cond.wait(lck);
-		std::cout << "3" << std::endl;
 		int n2(n);
-		mpz_class sum2(sum);
 		mpz_class pote2(pote);
+		mpz_class sum2(sum);
 		lck.unlock();
-		std::cout << "4" << std::endl;
 		
 		std::unique_lock<std::mutex> lck2(m2);
-		std::cout << "5" << std::endl;
-		//~ std::cout << std::setprecision(150) << mpf_class(t, 100000000) << std::endl;
 		mpq_class ti(t);
 		lck2.unlock();
-		std::cout << "6" << std::endl;
 		
-		mpq_class outodd, outeven;
-		if(n1%2 == 0) {
-			outodd = mpq_class(pote1*10005, sum1)/ti;
-			outeven = mpq_class(pote2, sum2)*ti;
-		} else {
-			outodd = mpq_class(pote2*10005, sum2)/ti;
-			outeven = mpq_class(pote1, sum1)*ti;
-		}
+		auto a1 = std::async(out, n1, std::move(pote1), std::move(sum1), ti);
+		auto a2 = std::async(out, n2, std::move(pote2), std::move(sum2), std::move(ti));
 		
-		//~ std::cout << std::setprecision(100000000) << ni << ": " << mpf_class(last, 100000000) << std::endl;
-		//~ std::cout << "7" << std::endl;
-		std::cout << n1 << ":" << n2 << std::endl;
+		mpq_class chudnovsky1 = a1.get();
+		mpq_class chudnovsky2 = a2.get();
+		
+		std::cout << std::setprecision(192) << n1 << ": " << mpf_class(chudnovsky1, 193) << std::endl;
+		std::cout << std::setprecision(192) << n2 << ": " << mpf_class(chudnovsky2, 193) << std::endl << std::endl;
 	}
 }
 
 void chudnovsky() {
 	mpz_class faku(1);
-	mpz_class inte;
 	
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-		std::unique_lock<std::mutex> lck(m);
+		std::lock_guard<std::mutex> lck(m);
 		//~ if (n%10000==0) std::cout << n << std::endl;
 		
-		//Thread 1.1:
-		n++;
-		faku *= (6*mpz_class(n)-5)*(6*n-3)*(6*n-1)*8;
-		faku /= mpz_class(n)*n*n;
-		inte = (13591409+545140134_mpz*n)*faku;
-		//Thread 1.2:
-		sum *= 262537412640768000_mpz;
-		//Thread 1.3:
-		pote *= 262537412640768000_mpz;
+		auto a1 = std::async([&]() -> mpz_class {
+			n++;
+			faku *= (6_mpz*n-5)*(6_mpz*n-3)*(6_mpz*n-1)*8;
+			faku /= mpz_class(n)*n*n;
+			return (13591409+545140134_mpz*n)*faku;
+		});
+		
+		auto a2 = std::async([&] {
+			sum *= 262537412640768000_mpz;
+		});
+		
+		auto a3 = std::async([&] {
+			pote *= 262537412640768000_mpz;
+		});
+		
+		a2.get();
+		a3.get();
 		
 		if (n%2 == 0) {
-			sum += inte;
+			sum += a1.get();
 		} else {
-			sum -= inte;
+			sum -= a1.get();
 		}
 		
 		cond.notify_all();
@@ -91,7 +96,7 @@ void root() {
 		mpq_class te(t);
 		te = (te*te+10005)/(te*2);
 		
-		std::unique_lock<std::mutex> lck2(m2);
+		std::lock_guard<std::mutex> lck2(m2);
 		t = te;
 	}
 }
