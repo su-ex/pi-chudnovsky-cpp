@@ -7,7 +7,7 @@ TARGET := pi
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-CFLAGS := -std=c++17 -g -Wall
+CFLAGS := -std=c++17 -g -Wall -O3 -march=native -frename-registers -fopenmp -D_GLIBCXX_PARALLEL
 LIB := -lgmpxx -lgmp -lpthread
 INC := -I include
 
