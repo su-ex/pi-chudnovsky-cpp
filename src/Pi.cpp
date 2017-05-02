@@ -59,7 +59,7 @@ void output() {
 }
 
 void chudnovsky() {
-	mpz_class faku(120);
+	mpz_class faku(1);
 	
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1));
@@ -69,51 +69,35 @@ void chudnovsky() {
 		if (n % timesAtNsIteration == 0) std::cout << "n: " << n << "\t";
 		olck.unlock();
 		
-		n++;
-		mpz_class fakub(faku);
-		
-		auto a1 = std::async([&] {
-			if (n % timesAtNsIteration == 0) TimeMeasurement tm("a1");
-			
-			mpz_class nb(n+1);
-			mpz_class helper(6*nb);
-			faku *= (helper-5)*(helper-3)*(helper-1)*8;
-			faku /= mpz_class(nb)*nb*nb;
+		auto a1 = std::async([&]() -> mpz_class {
+			TimeMeasurement tm("a1");
+			n++;
+			faku *= (6_mpz*n-5)*(6_mpz*n-3)*(6_mpz*n-1)*8;
+			faku /= mpz_class(n)*n*n;
+			return (13591409+545140134_mpz*n)*faku;
 		});
 		
 		auto a2 = std::async([&] {
-			if (n % timesAtNsIteration == 0) TimeMeasurement tm("a2");
-			
-			pote *= 262537412640768000_mpz;
+			TimeMeasurement tm("a2");
+			sum *= 262537412640768000_mpz;
 		});
 		
 		auto a3 = std::async([&] {
-			if (n % timesAtNsIteration == 0) TimeMeasurement tm("a3");
-			
-			auto a3_1 = std::async([&]() -> mpz_class {
-				if (n % timesAtNsIteration == 0) TimeMeasurement tm("a3_1");
-				
-				return (13591409+545140134_mpz*n)*fakub;
-			});
-			
-			auto a3_2 = std::async([&] {
-				if (n % timesAtNsIteration == 0) TimeMeasurement tm("a3_2");
-				
-				sum *= 262537412640768000_mpz;
-			});
-			
-			a3_2.get();
-			
-			if (n%2 == 0) {
-				sum += a3_1.get();
-			} else {
-				sum -= a3_1.get();
-			}
+			TimeMeasurement tm("a3");
+			pote *= 262537412640768000_mpz;
 		});
 		
-		a1.get();
 		a2.get();
 		a3.get();
+		
+		{
+			TimeMeasurement tm("add");
+			if (n%2 == 0) {
+				sum += a1.get();
+			} else {
+				sum -= a1.get();
+			}
+		}
 		
 		olck.lock();
 		if (n % timesAtNsIteration == 0) std::cout << std::endl;
