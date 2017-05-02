@@ -6,6 +6,9 @@
 #include <mutex>
 #include <future>
 #include <chrono>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
 #include "TimeMeasurement.h"
 
 int timesAtNsIteration = 1;
@@ -132,7 +135,22 @@ void root() {
 	}
 }
 
+TimeMeasurement tm("\ntotal");
+
+void my_handler(int s) {
+	exit(1); 
+
+}
+
 int main() {
+	struct sigaction sigIntHandler;
+	
+	sigIntHandler.sa_handler = my_handler;
+	sigemptyset(&sigIntHandler.sa_mask);
+	sigIntHandler.sa_flags = 0;
+	
+	sigaction(SIGINT, &sigIntHandler, NULL);
+	
 	//~ std::thread t1(output);
 	std::thread t2(chudnovsky);
 	//~ std::thread t3(root);
