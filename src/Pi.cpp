@@ -5,6 +5,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <future>
+#include <chrono>
 
 int n(0);
 mpz_class pote(426880);
@@ -49,36 +50,48 @@ void output() {
 }
 
 void chudnovsky() {
-	mpz_class faku(1);
+	mpz_class faku(120);
 	
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1));
 		std::lock_guard<std::mutex> lck(m);
 		//~ if (n%10000==0) std::cout << n << std::endl;
 		
-		auto a1 = std::async([&]() -> mpz_class {
-			n++;
-			faku *= (6_mpz*n-5)*(6_mpz*n-3)*(6_mpz*n-1)*8;
-			faku /= mpz_class(n)*n*n;
-			return (13591409+545140134_mpz*n)*faku;
+		n++;
+		mpz_class fakub(faku);
+		
+		auto a1 = std::async([&] {
+			mpz_class nb(n+1);
+			mpz_class helper(6*nb);
+			faku *= (helper-5)*(helper-3)*(helper-1)*8;
+			faku /= mpz_class(nb)*nb*nb;
 		});
 		
 		auto a2 = std::async([&] {
-			sum *= 262537412640768000_mpz;
-		});
-		
-		auto a3 = std::async([&] {
 			pote *= 262537412640768000_mpz;
 		});
 		
+		auto a3 = std::async([&] {
+			auto a3_1 = std::async([&]() -> mpz_class {
+				return (13591409+545140134_mpz*n)*fakub;
+			});
+			
+			auto a3_2 = std::async([&] {
+				sum *= 262537412640768000_mpz;
+			});
+			
+			a3_2.get();
+			
+			if (n%2 == 0) {
+				sum += a3_1.get();
+			} else {
+				sum -= a3_1.get();
+			}
+		});
+		
+		a1.get();
 		a2.get();
 		a3.get();
-		
-		if (n%2 == 0) {
-			sum += a1.get();
-		} else {
-			sum -= a1.get();
-		}
 		
 		cond.notify_all();
 	}
