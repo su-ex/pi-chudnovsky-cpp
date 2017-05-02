@@ -32,7 +32,7 @@ void output() {
 		}
 	};
 	
-	while (true) {
+	while (n < 800000) {
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1));
 		
 		std::unique_lock<std::mutex> lck2(m2);
@@ -61,7 +61,7 @@ void output() {
 void chudnovsky() {
 	mpz_class faku(1);
 	
-	while (true) {
+	while (n < 800000) {
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1));
 		std::lock_guard<std::mutex> lck(m);
 		
@@ -108,7 +108,7 @@ void chudnovsky() {
 }
 
 void root() {
-	while (true) {
+	while (n < 800000) {
 		std::this_thread::sleep_for(std::chrono::nanoseconds(1));
 		
 		mpq_class te(t);
